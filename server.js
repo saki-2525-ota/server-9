@@ -87,7 +87,7 @@ app.post('/api/login', async (c) => {
   });
 
   // レスポンス
-  return c.json({ message: 'ログイン成功', username: user.username });
+  return c.json({ message: 'ログイン成功', username: user.username, token: token });
 });
 
 /* 上記以外の /api 以下へのアクセスにはログインが必要 */
