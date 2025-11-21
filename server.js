@@ -66,49 +66,94 @@ c.status(201); // 201 Created
 return c.json({ message: 'ユーザー登録が成功しました' });
 
 /*** ログイン ***/
-app.post('/api/login', async (c) => {
+//app.post('/api/login', async (c) => {
   // ログイン情報の取得
-  const { username, password } = await c.req.json();
-  const userEntry = await kv.get(['users', username]);
-  const user = userEntry.value;
+  //const { username, password } = await c.req.json();
+  //const userEntry = await kv.get(['users', username]);
+  //const user = userEntry.value;
 
-  if (!user) {
-    c.status(401); // 401 Unauthorized
-    return c.json({ message: 'ユーザー名が無効です' });
-  }
+  //if (!user) {
+    //c.status(401); // 401 Unauthorized
+    //return c.json({ message: 'ユーザー名が無効です' });
+  //}
 
   // ハッシュ化されたパスワードと比較
-  if (!(await verify(password, user.hashedPassword))) {
-    c.status(401); // 401 Unauthorized
-    return c.json({ message: 'パスワードが無効です' });
-  }
+  //if (!(await verify(password, user.hashedPassword))) {
+    //c.status(401); // 401 Unauthorized
+    //return c.json({ message: 'パスワードが無効です' });
+  //}
 
   // JWTの本体（ペイロード）を設定
-  const payload = {
-    sub: user.username, // ユーザー識別子（連番IDでもよい）
+  //const payload = {
+    //sub: user.username, // ユーザー識別子（連番IDでもよい）
     // name: user.username,  // 表示用のユーザー名
-    iat: Math.floor(Date.now() / 1000), // 発行日時
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24時間有効
-  };
+    //iat: Math.floor(Date.now() / 1000), // 発行日時
+    //exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24時間有効
+  //};
 
   // JWT（トークン）を生成
-  const token = await sign(payload, JWT_SECRET);
+  //const token = await sign(payload, JWT_SECRET);
 
   // JWTをHttpOnlyのクッキーに設定
-  setCookie(c, COOKIE_NAME, token, {
-    path: '/',
-    httpOnly: true,
-    secure: false, // 開発環境のためfalseにしているが本番環境ではtrueにする
-    sameSite: 'Strict',
-    maxAge: 60 * 60 * 24 // 24時間有効
-  });
+  //setCookie(c, COOKIE_NAME, token, {
+    //path: '/',
+    //httpOnly: true,
+    //secure: false, // 開発環境のためfalseにしているが本番環境ではtrueにする
+    //sameSite: 'Strict',
+    //maxAge: 60 * 60 * 24 // 24時間有効
+  //});
 
   // レスポンス
-  return c.json({ message: 'ログイン成功', username: user.username, token: token });
-});
+  //return c.json({ message: 'ログイン成功', username: user.username, token: token });
+//});
 
 /* 上記以外の /api 以下へのアクセスにはログインが必要 */
-app.use('/api/*', jwt({ secret: JWT_SECRET, cookie: COOKIE_NAME }));
+//app.use('/api/*', jwt({ secret: JWT_SECRET, cookie: COOKIE_NAME }));
+
+/* ログイン */
+const loginForm = document.getElementById('loginForm');
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('loginUsername').value;
+  const password = document.getElementById('loginPassword').value;
+
+  // POSTリクエスト
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await res.json();
+  result.textContent=data.message;
+  if(res.ok){
+    localStorage.jwt=data.token;
+  }
+
+  const getProfileButton = document.getElementById('getProfileButton');
+  getProfileButton.addEventListener('click', async (e) => {
+    e.preventDefault();
+
+    const token = localStorage.jwt;
+    if(!token){
+      result.textContent='ログインしてください';
+      return;
+    }
+
+    const res= await fetch('/api/profile', {
+      method:'GET',
+      headers:{
+        Authorization: 'Bearer  ${token}'
+      },
+  });
+
+  if(res.ok){
+    const data=await res.json();
+    result.textContent='ログインユーザー：'+data.username;
+  }else{
+    result.textContent='トークンが異なります';
+  }
+});
 
 /*** ログアウト ***/
 app.post('/api/logout', (c) => {
