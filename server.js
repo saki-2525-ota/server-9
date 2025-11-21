@@ -24,29 +24,46 @@ const kv = await Deno.openKv();
  */
 
 /*** ユーザー登録 ***/
-app.post('/api/signup', async (c) => {
-  // 登録情報の取得
-  const { username, password } = await c.req.json();
-  if (!username || !password) {
-    c.status(400); // 400 Bad Request
-    return c.json({ message: 'ユーザー名とパスワードは必須です' });
-  }
+//app.post('/api/signup', async (c) => {
+// 登録情報の取得
+//const { username, password } = await c.req.json();
+//if (!username || !password) {
+//c.status(400); // 400 Bad Request
+//return c.json({ message: 'ユーザー名とパスワードは必須です' });
+//}
+const signupForm = document.getElementById('signupForm');
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('signupUsername').value;
+  const password = dpcument.getElemantById('signupPassword').value;
 
-  // ユーザー名がすでにないか確認
-  const userExists = await kv.get(['users', username]);
-  if (userExists.value) {
-    c.status(409); // 409 Conflict
-    return c.json({ message: 'このユーザー名は既に使用されています' });
-  }
-
-  // パスワードをハッシュ化してユーザー名とともにデータベースに記録
-  const hashedPassword = await hash(password);
-  const user = { username, hashedPassword };
-  await kv.set(['users', username], user);
-
-  c.status(201); // 201 Created
-  return c.json({ message: 'ユーザー登録が成功しました' });
+  // POSTリクエスト
+  const res = await fetch('/api/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: this.signupUsername,
+      password: this.signupPassword
+    })
+  });
+  const data = await res.json();
+  this.resultdata.message;
 });
+
+// ユーザー名がすでにないか確認
+const userExists = await kv.get(['users', username]);
+if (userExists.value) {
+  c.status(409); // 409 Conflict
+  return c.json({ message: 'このユーザー名は既に使用されています' });
+}
+
+// パスワードをハッシュ化してユーザー名とともにデータベースに記録
+const hashedPassword = await hash(password);
+const user = { username, hashedPassword };
+await kv.set(['users', username], user);
+
+c.status(201); // 201 Created
+return c.json({ message: 'ユーザー登録が成功しました' });
 
 /*** ログイン ***/
 app.post('/api/login', async (c) => {
